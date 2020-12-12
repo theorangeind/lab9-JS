@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+        .area {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        .box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 200px;
+            width: 200px;
+            background-color: rgb(0, 119, 255);
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #add-btn {
+            position: fixed;
+            bottom: 50px;
+            right: 50px;
+            height: 50px;
+            width: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 100%;
+            background-color: rgb(0, 0, 0);
+            color: #fff;
+            cursor: pointer;
+            user-select: none;
+        }
+/*added text area decoration*/
+        .box textarea{
+            resize: none;
+            border-color: rgb(0, 119, 255);
+            position: absolute;
+            bottom: 0;
+            margin-left: 50%;
+            transform: translateX(-50%);
+        }
+/*=========================*/
+    </style>
+</head>
+<body>
+        
+    <div id="app">
+        <div class="area"></div>
+        <a id="add-btn">+</a>    
+    </div>
+    
+<script>
+
+    // let $box = document.querySelector('.box');
+    let $area = document.querySelector('.area');
+    let $btn = document.querySelector('#add-btn');
+    let action = false;
+
+    let distanceX = 0;
+    let distanceY = 0;
+    let x1 = 0;
+    let y1 = 0;
+    let x2 = 0;
+    let y2 = 0;
+
+    let $selectedBox = 0;
+    let selectedBoxIndex = 0;
+
+    let list = [];
+
+    if (localStorage.getItem('boxes')) {
+        console.log(1);
+        list = JSON.parse(localStorage.getItem('boxes'));
+        boxGenerator();
+    }
+
+    function boxController(x, y) {
+        $selectedBox.style.cssText = 'transform: translate(' + x + 'px, ' + y + 'px)';
+    }
+
+    function boxGenerator() {
+        let template = '';
+        for (let i = 0; i < list.length; i++) {
+//added text area
+            template += '<div class="box" data-index="' + i + '" style="transform: translate(' + list[i].x + 'px, ' + list[i].y + 'px)"><textarea class="txt" cols="25" rows="11">' + list[i].t + '</textarea></div>';
+//===============
+        }
+        $area.innerHTML = template;
+
+//adding input event handler to all text areas
+        let l = document.querySelectorAll('.txt');
+        for(let i = 0; i < l.length; i++) {
+            l[i].addEventListener('input', function() {
+                $selectedBox = this.parentNode;
+                if ($selectedBox.classList.contains('box')) {
+                    selectedBoxIndex = parseFloat($selectedBox.getAttribute('data-index'));
+                }
+                list[selectedBoxIndex].t = this.value;
+                localStorage.setItem('boxes', JSON.stringify(list));
+                console.log(list);
+            })
+        }
+//============================================
+    }
+
+    window.addEventListener('mousedown', function (e) {
+        $selectedBox = e.target;
+        if ($selectedBox.classList.contains('box')) {
+            selectedBoxIndex = parseFloat($selectedBox.getAttribute('data-index'));
+            console.log(selectedBoxIndex);
+
+            action = true;
+            x1 = e.clientX;
+            y1 = e.clientY;
+        }
+    });
+//method rewritten
+    window.addEventListener('mouseup', function (e) {
+        if(action) {
+            action = false;
+            if(list[selectedBoxIndex]) { 
+                list[selectedBoxIndex].x = distanceX;
+                list[selectedBoxIndex].y = distanceY;
+                localStorage.setItem('boxes', JSON.stringify(list));
+            }
+        }
+    });
+//===============
+    window.addEventListener('mousemove', function (e) {
+        if (action) {
+            x2 = e.clientX;
+            y2 = e.clientY;
+            distanceX = list[selectedBoxIndex].x + (x2 - x1);
+            distanceY = list[selectedBoxIndex].y + (y2 - y1);
+            boxController(distanceX, distanceY);
+        }
+    });
+
+    $btn.addEventListener('click', function () {
+        list.push({
+            x: 0,
+            y: 0,
+//added field 't' to object for storing the text
+            t: "",
+//==============================================
+            color: '#fff'
+        });
+        boxGenerator();
+    });
+</script>
+</body>
+</html>
